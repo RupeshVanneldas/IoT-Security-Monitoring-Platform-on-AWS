@@ -1,0 +1,205 @@
+---
+- name: Bring all services up
+  hosts: all
+  become: true
+
+  vars:
+    elastic_repo_major: "9.x"
+    elastic_keyring_path: "/usr/share/keyrings/elasticsearch-keyring.gpg"
+    elastic_repo_file: "elastic-9.x"
+
+  handlers:
+    - name: restart mosquitto
+      ansible.builtin.systemd:
+        name: mosquitto
+        state: restarted
+        enabled: true
+        
+    - name: run suricata-update
+      ansible.builtin.command: suricata-update
+      notify: restart suricata
+
+    - name: restart suricata
+      ansible.builtin.systemd:
+        name: suricata
+        state: restarted
+        enabled: true
+
+    - name: restart elasticsearch
+      ansible.builtin.systemd:
+        name: elasticsearch
+        state: restarted
+        enabled: true
+
+    - name: restart kibana
+      ansible.builtin.systemd:
+        name: kibana
+        state: restarted
+        enabled: true
+
+    - name: restart filebeat
+      ansible.builtin.systemd:
+        name: filebeat
+        state: restarted
+        enabled: true
+
+  tasks:
+    - name: Update and upgrade all packages
+      ansible.builtin.apt:
+        update_cache: true
+        upgrade: dist
+
+    # ---- Prerequisites ----
+    - name: Install base packages
+      ansible.builtin.apt:
+        name:
+          - wget
+          - curl
+          - gnupg
+          - ca-certificates
+          - apt-transport-https
+          - net-tools
+          - mosquitto
+          - mosquitto-clients
+        state: present
+
+    # ---- Add OISF Suricata PPA and install/upgrade Suricata ----
+
+    - name: Add OISF Suricata 7.0 PPA
+      ansible.builtin.apt_repository:
+        repo: ppa:oisf/suricata-7.0
+        state: present
+
+    - name: Pin Suricata to the 7.0 PPA
+      ansible.builtin.copy:
+        dest: /etc/apt/preferences.d/suricata
+        mode: "0644"
+        content: |
+          Package: suricata
+          Pin: release o=LP-PPA-oisf-suricata-7.0
+          Pin-Priority: 1001
+
+    - name: Update apt cache after adding OISF PPA
+      ansible.builtin.apt:
+        update_cache: true
+
+    - name: Install/Upgrade Suricata (7.x)
+      ansible.builtin.apt:
+        name: suricata
+        state: latest
+
+    # ---- Add Elastic GPG key and repo (9.x) ----
+    - name: Ensure keyrings directory exists
+      ansible.builtin.file:
+        path: /usr/share/keyrings
+        state: directory
+        mode: "0755"
+
+    - name: Download and install Elastic GPG key (dearmored)
+      ansible.builtin.shell: |
+        curl -fsSL https://artifacts.elastic.co/GPG-KEY-elasticsearch | gpg --dearmor -o {{ elastic_keyring_path }}
+      args:
+        creates: "{{ elastic_keyring_path }}"
+
+    - name: Add Elastic {{ elastic_repo_major }} APT repository
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by={{ elastic_keyring_path }}] https://artifacts.elastic.co/packages/{{ elastic_repo_major }}/apt stable main"
+        filename: "{{ elastic_repo_file }}"
+        state: present
+      register: elastic_repo_added
+
+    - name: Update apt cache after adding Elastic repo
+      ansible.builtin.apt:
+        update_cache: true
+      when: elastic_repo_added is changed
+
+    # ---- Install Elastic components ----
+    - name: Install Elasticsearch and Kibana
+      ansible.builtin.apt:
+        name:
+          - elasticsearch
+          - kibana
+        state: present
+
+    - name: Install Filebeat from Elastic 9.x repo
+      ansible.builtin.apt:
+        name: filebeat
+        state: present
+      notify: restart filebeat
+
+    # ---- Push configuration files ----
+
+    - name: Push mosquitto.conf
+      ansible.builtin.copy:
+        src: files/mosquitto.conf
+        dest: /etc/mosquitto/mosquitto.conf
+        owner: root
+        group: root
+        mode: "0644"
+      notify: restart mosquitto
+
+    - name: Push suricata.yaml (7.x compatible)
+      ansible.builtin.copy:
+        src: files/suricata.yaml
+        dest: /etc/suricata/suricata.yaml
+        owner: root
+        group: root
+        mode: "0644"
+      notify: restart suricata
+
+    - name: Ensure Suricata rules directory exists
+      ansible.builtin.file:
+        path: /var/lib/suricata/rules
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Push custom.rules
+      ansible.builtin.copy:
+        src: files/custom.rules
+        dest: /var/lib/suricata/rules/custom.rules
+        owner: root
+        group: root
+        mode: "0644"
+      notify: run suricata-update
+
+    - name: Push filebeat.yml
+      ansible.builtin.copy:
+        src: files/filebeat.yml
+        dest: /etc/filebeat/filebeat.yml
+        owner: root
+        group: root
+        mode: "0644"
+      notify: restart filebeat
+
+    - name: Push elasticsearch.yml
+      ansible.builtin.copy:
+        src: files/elasticsearch.yml
+        dest: /etc/elasticsearch/elasticsearch.yml
+        owner: root
+        group: root
+        mode: "0644"
+      notify: restart elasticsearch
+
+    - name: Push kibana.yml
+      ansible.builtin.copy:
+        src: files/kibana.yml
+        dest: /etc/kibana/kibana.yml
+        owner: root
+        group: root
+        mode: "0644"
+      notify: restart kibana
+
+    # ---- Enable and start services ----
+    - name: Ensure all services are enabled and started
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+      loop:
+        - mosquitto
+        - suricata
+        - elasticsearch
+        - kibana
+        - filebeat
