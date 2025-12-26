@@ -26,8 +26,8 @@ project-key.pub
 *.pub
 
 # --- Local config / inventory ---
-hosts.ini
-*.ini
+# hosts.ini
+# *.ini
 
 # --- Ansible artifacts ---
 *.retry

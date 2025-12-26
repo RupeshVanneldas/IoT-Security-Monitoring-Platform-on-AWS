@@ -1,2 +1,9 @@
-alert tcp any any -> $HOME_NET 1883 (msg:"High MQTT Traffic Rate"; threshold: type both, track by_dst, count 500, seconds 60; sid:1000001;)
-alert tcp any any -> $HOME_NET 1883 (msg:"Large MQTT Packet"; byte_test:4,>,1024,0,relative; sid:1000002;)
+alert tcp any any -> any 1883 (msg:"MQTT PUBLISH - Normal Sensor JSON"; flow:established,to_server; content:"\"temperature\""; nocase; content:"\"timestamp\""; nocase; pcre:"/\"temperature\".*\"timestamp\"/s"; sid:1002001; rev:1; classtype:informational;)
+
+alert tcp any any -> any 1883 (msg:"MQTT PUBLISH - DDoS Payload Detected!"; flow:established,to_server; content:"DDoS Attack!"; threshold:type limit, track by_dst, count 30, seconds 40; sid:1002002; rev:1; classtype:attempted-dos;)
+
+alert tcp any any -> any 1883 (msg:"MQTT PUBLISH - Malformed JSON Fragment"; flow:established,to_server; content:"{malformed: data"; sid:1002003; rev:1; classtype:protocol-command-decode;)
+
+alert tcp any any -> any 1883 (msg:"MQTT PUBLISH - Possible unclosed JSON payload"; flow:established,to_server; pcre:"/\{[^}]{0,2048}\z/"; sid:1002004; rev:1; classtype:protocol-anomaly;)
+
+alert tcp any any -> any 1883 (msg:"MQTT PUBLISH - Large packet"; flow:established,to_server; dsize:>1024; sid:1002005; rev:1; classtype:protocol-anomaly;)

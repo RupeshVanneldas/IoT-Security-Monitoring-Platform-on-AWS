@@ -1,0 +1,33 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "iot:Publish",
+        "iot:Receive",
+        "iot:PublishRetain"
+      ],
+      "Resource": [
+        "arn:aws:iot:us-east-1:058264422222:topic/sdk/test/*",
+        "arn:aws:iot:us-east-1:058264422222:topic/raspberrypi/temperature"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": "iot:Subscribe",
+      "Resource": [
+        "arn:aws:iot:us-east-1:058264422222:topicfilter/sdk/test/*",
+        "arn:aws:iot:us-east-1:058264422222:topicfilter/raspberrypi/temperature"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": "iot:Connect",
+      "Resource": [
+        "arn:aws:iot:us-east-1:058264422222:client/raspberrypi-temp-sensor",
+        "arn:aws:iot:us-east-1:058264422222:client/sdk-*"
+      ]
+    }
+  ]
+}

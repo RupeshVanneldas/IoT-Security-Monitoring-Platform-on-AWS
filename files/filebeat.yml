@@ -19,19 +19,22 @@ filebeat.inputs:
 # Below are the input-specific configurations.
 
 # filestream is an input for collecting log messages from files.
-- type: log
+- type: filestream
 
   # Unique ID among all inputs, an ID is required.
-  id: my-filestream-id
+  id: suricata-eve
 
   # Change to true to enable this input configuration.
-  enabled: false
+  enabled: true
 
   # Paths that should be crawled and fetched. Glob based paths.
   paths:
     - /var/log/suricata/eve.json
-  json.keys_under_root: true
-  json.add_error_key: true
+
+  parsers:
+  - ndjson:
+      target: ""
+      add_error_key: true
     #- c:\programdata\elasticsearch\logs\*
 
   # Exclude lines. A list of regular expressions to match. It drops the lines that are
@@ -176,7 +179,6 @@ output.elasticsearch:
   #api_key: "id:api_key"
   # username: "elastic"
   # password: "NewPass123!"
-  index: "suricata-%{[agent.version]}-%{+yyyy.MM.dd}"
 
 # ------------------------------ Logstash Output -------------------------------
 #output.logstash:

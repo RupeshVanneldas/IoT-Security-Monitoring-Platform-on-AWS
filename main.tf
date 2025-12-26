@@ -150,3 +150,72 @@ resource "aws_eip_association" "web_eip_association" {
   instance_id   = aws_instance.web_server.id
   allocation_id = aws_eip.web_eip.id
 }
+
+resource "aws_s3_bucket" "vpc_flow_logs" {
+  bucket_prefix = "project-vpc-flow-logs-"
+  force_destroy = true
+
+  tags = {
+    Name = "Project-VPC-Flow-Logs"
+  }
+}
+
+data "aws_iam_policy_document" "vpc_flow_logs_policy" {
+  statement {
+    sid = "AWSVPCFlowLogsWrite"
+
+    principals {
+      type        = "Service"
+      identifiers = ["vpc-flow-logs.amazonaws.com"]
+    }
+
+    actions = [
+      "s3:PutObject"
+    ]
+
+    resources = [
+      "${aws_s3_bucket.vpc_flow_logs.arn}/*"
+    ]
+  }
+}
+
+resource "aws_s3_bucket_policy" "vpc_flow_logs_policy" {
+  bucket = aws_s3_bucket.vpc_flow_logs.id
+  policy = data.aws_iam_policy_document.vpc_flow_logs_policy.json
+}
+
+resource "aws_flow_log" "project_vpc_flow_log" {
+  log_destination      = aws_s3_bucket.vpc_flow_logs.arn
+  log_destination_type = "s3"
+  traffic_type         = "ALL"
+  vpc_id               = aws_vpc.prod_vpc.id
+
+  tags = {
+    Name = "Project-VPC-Flow-Logs"
+  }
+}
+
+resource "aws_s3_bucket" "athena_results" {
+  bucket_prefix = "project-athena-results-"
+  force_destroy = true
+
+  tags = {
+    Name = "Project-Athena-Results"
+  }
+}
+
+resource "aws_athena_database" "project_flow_logs_db" {
+  name   = "project_vpc_flow_logs_db"
+  bucket = aws_s3_bucket.athena_results.bucket
+}
+
+resource "aws_athena_workgroup" "project_analysis" {
+  name          = "project_analysis"
+  force_destroy = true
+
+  configuration {
+    result_configuration {
+      output_location = "s3://${aws_s3_bucket.athena_results.bucket}/results/"
+    }
+  }
+}
