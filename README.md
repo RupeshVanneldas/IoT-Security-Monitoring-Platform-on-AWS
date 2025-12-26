@@ -58,7 +58,7 @@ The project focuses on securing MQTT-based IoT communications and correlating ID
 ---
 
 ## 📁 Repository Structure
-
+```bash
 .
 ├── README.md
 ├── LICENSE
@@ -78,7 +78,7 @@ The project focuses on securing MQTT-based IoT communications and correlating ID
 │ ├── elasticsearch.yml
 │ └── kibana.yml
 └── .gitignore
-
+```
 
 ---
 
@@ -98,6 +98,7 @@ Terraform provisions:
 ```bash
 terraform init
 terraform apply
+```
 
 ### 🔹 Step 2: Service Setup & Configuration (Ansible)
 
@@ -115,6 +116,7 @@ terraform apply
 
 ```bash
 ansible-playbook -i hosts.ini playbook.yml --become
+```
 
 ### 🔹 Step 3: Elastic Stack Security Configuration
 
@@ -130,9 +132,9 @@ This avoids storing sensitive credentials in code or automation scripts.
 
 ---
 
-## IoT Attack Detection (Suricata + ELK)
+## 🛡️ IoT Attack Detection (Suricata + ELK)
 
-🛡️Suricata inspects MQTT traffic on port 1883 using custom rules to detect:
+Suricata inspects MQTT traffic on port 1883 using custom rules to detect:
 
 - ✅ Normal sensor data
 
@@ -168,36 +170,36 @@ All SQL queries used are documented in: athena_queries.sql
 
 ---
 
-##🧪 Attack Scenarios Simulated
+## 🧪 Attack Scenarios Simulated
 
-Normal IoT temperature updates
+- Normal IoT temperature updates
 
-MQTT message flooding
+- MQTT message flooding
 
-Malformed payload injection
+- Malformed payload injection
 
-Large payload transmission
+- Large payload transmission
 
-Each attack produces:
+- Each attack produces:
 
-Application-layer IDS alerts (Suricata)
+    i) Application-layer IDS alerts (Suricata)
 
-Corresponding network flow records (AWS Flow Logs)
-
----
-
-##📊 Key Observations
-
-MQTT requires protocol-aware inspection
-
-IDS alerts provide payload-level visibility
-
-VPC Flow Logs provide traffic context, not content
-
-Combining both layers improves detection confidence
+    ii) Corresponding network flow records (AWS Flow Logs)
 
 ---
 
-##📌 Conclusion
+## 📊 Key Observations
+
+- MQTT requires protocol-aware inspection
+
+- IDS alerts provide payload-level visibility
+
+- VPC Flow Logs provide traffic context, not content
+
+- Combining both layers improves detection confidence
+
+---
+
+## 📌 Conclusion
 
 This project demonstrates a layered IoT security monitoring approach, integrating host-based intrusion detection with cloud-native network analysis. By combining Suricata, the Elastic Stack, and AWS VPC Flow Logs, the platform enables effective detection, investigation, and correlation of IoT-based attacks.
