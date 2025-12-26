@@ -8,6 +8,7 @@
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 An **end-to-end IoT Security Monitoring and Attack Analysis Platform** that combines **application-layer intrusion detection** with **cloud-native network traffic analysis**.  
+
 The project focuses on securing MQTT-based IoT communications and correlating IDS alerts with AWS VPC Flow Logs for deeper attack visibility.
 
 ---
@@ -23,6 +24,8 @@ The project focuses on securing MQTT-based IoT communications and correlating ID
 ---
 
 ## 🏗️ Architecture Overview
+
+<img width="1536" height="1024" alt="ChatGPT Image Dec 26, 2025, 01_37_09 AM" src="https://github.com/user-attachments/assets/c251550c-03b8-404a-aff8-e0b038c99c09" />
 
 ---
 
@@ -57,28 +60,28 @@ The project focuses on securing MQTT-based IoT communications and correlating ID
 
 ---
 
-## 📁 Repository Structure
-```bash
-.
-├── README.md
-├── LICENSE
-├── main.tf
-├── athena_queries.sql
-├── playbook.yml
-├── hosts.ini
-├── iot_policy.json
-├── sensor_test.py
-├── temp_to_aws.py
-├── temp_to_dual_mqtt.py
-├── files/
-│ ├── custom.rules
-│ ├── suricata.yaml
-│ ├── filebeat.yml
-│ ├── mosquitto.conf
-│ ├── elasticsearch.yml
-│ └── kibana.yml
-└── .gitignore
-```
+## ⚡ High-Level Execution Flow
+
+1. Provision cloud infrastructure using Terraform
+2. Configure and deploy services using Ansible
+3. Simulate IoT MQTT traffic and attack scenarios
+4. Detect malicious payloads using Suricata IDS
+5. Visualize alerts in Kibana
+6. Analyze network traffic using Athena and VPC Flow Logs
+7. Correlate application-layer alerts with network behavior
+
+---
+
+## 🤖 Automation vs Manual Configuration
+
+| Component | Method |
+|----------|-------|
+| AWS Infrastructure | Terraform |
+| Service Installation & Config | Ansible |
+| Suricata Rules | Version-controlled |
+| Log Shipping | Automated (Filebeat) |
+| Elastic Password & Tokens | Manual (Security Best Practice) |
+| Athena Table Creation | Manual (SQL) |
 
 ---
 
@@ -197,6 +200,31 @@ All SQL queries used are documented in: athena_queries.sql
 - VPC Flow Logs provide traffic context, not content
 
 - Combining both layers improves detection confidence
+
+---
+
+## 🔍 Threat Model Summary
+
+This platform focuses on detecting threats commonly observed in IoT environments, including:
+- Message flooding and denial-of-service attempts
+- Malformed or protocol-abusive MQTT payloads
+- Oversized message delivery attacks
+- Anomalous traffic volume at the network layer
+
+The design intentionally combines payload inspection and flow-level telemetry to reduce false positives and improve investigative context.
+
+---
+
+## 🚧 Limitations & Future Enhancements
+
+- TLS-encrypted MQTT traffic is not inspected at the payload level
+- Correlation between IDS alerts and VPC Flow Logs is performed manually
+- No automated alerting pipeline (email / Slack) is configured
+
+Future improvements could include:
+- MQTT over TLS inspection using broker-side logging
+- Automated correlation using Lambda or SIEM enrichment
+- Real-time alerting and incident response workflows
 
 ---
 
