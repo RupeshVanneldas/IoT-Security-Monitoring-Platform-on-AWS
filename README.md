@@ -11,6 +11,9 @@ An **end-to-end IoT Security Monitoring and Attack Analysis Platform** that comb
 
 The project focuses on securing MQTT-based IoT communications and correlating IDS alerts with AWS VPC Flow Logs for deeper attack visibility.
 
+📄 Detailed documentation with screenshots:
+https://bright-blender-e21.notion.site/IoT-Security-Monitoring-and-Attack-Analysis-Platform-2dfe54c3a2c9802bb47de5830a82422e
+
 ---
 
 ## 🎯 Project Goals
