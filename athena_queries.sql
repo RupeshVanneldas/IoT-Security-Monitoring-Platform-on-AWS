@@ -11,6 +11,31 @@
 -- generated in Part 3 (Suricata MQTT inspection).
 -- ============================================================
 
+-- =========================
+-- 0. Athena VPC Flow Logs Setup
+-- =========================
+
+-- Create Flow Logs Table
+
+CREATE EXTERNAL TABLE IF NOT EXISTS vpc_flow_logs (
+  version INT,
+  account_id STRING,
+  interface_id STRING,
+  srcaddr STRING,
+  dstaddr STRING,
+  srcport INT,
+  dstport INT,
+  protocol INT,
+  packets BIGINT,
+  bytes BIGINT,
+  start_time BIGINT,
+  end_time BIGINT,
+  action STRING,
+  log_status STRING
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ' '
+LOCATION 's3://project-vpc-flow-logs-<bucket-suffix>/AWSLogs/<ACCOUNT_ID>/vpcflowlogs/us-east-1/';
 
 -- ------------------------------------------------------------
 -- 1. Verify that VPC Flow Logs are being ingested correctly
